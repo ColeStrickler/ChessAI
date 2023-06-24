@@ -1,9 +1,12 @@
 from board import Board
 import pygame as p
 
+BOARD_WIDTH = 60*8 + 200
+BOARD_HEIGHT = 60*8
+
 
 p.init()
-screen = p.display.set_mode((60*8, 60*8))
+screen = p.display.set_mode((BOARD_WIDTH, BOARD_HEIGHT))
 clock = p.time.Clock()
 b = Board(p, screen)
 

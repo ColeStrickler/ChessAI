@@ -11,6 +11,8 @@ class Piece():
         self.screen = screen
         self.pos = (y, x)
         self.team = team
+        self.icon_size = 25
+        self.icon = None
 
     def move(self, tgt):
         self.getMoves()
@@ -24,6 +26,9 @@ class Piece():
             self.pos = tgt
             y, x = self.pos
             self.board.board[y][x] = f"{self.team}{self.type}"
+            return True
+        else:
+            return False
 
     def getMoves(self):
         return
@@ -32,6 +37,9 @@ class Piece():
         rect = p.Rect(self.pos[1] * self.board.sq_size, self.pos[0] * self.board.sq_size, self.board.sq_size, self.board.sq_size)
         self.screen.blit(self.image, rect)
 
+    def draw_icon(self, x, y):
+        rect = p.Rect(x, y, self.icon_size, self.icon_size)
+        self.screen.blit(self.icon, rect)
 
 
 
@@ -43,6 +51,7 @@ class Pawn(Piece):
         super().__init__(y, x, team, board, screen)
         self.start = True
         self.image = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.board.sq_size, self.board.sq_size))
+        self.icon = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.icon_size, self.icon_size))
         if self.team == "b":
             self.direction = 1
         else:
@@ -86,6 +95,7 @@ class Knight(Piece):
     def __init__(self, y, x, team, board, screen):
         super().__init__(y, x, team, board, screen)
         self.image = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.board.sq_size, self.board.sq_size))
+        self.icon = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.icon_size, self.icon_size))
 
     def getMoves(self):
         dir = [(1, 2), (1, -2), (-1, 2), (-1, -2), (2, 1), (-2, 1), (2, -1), (-2, -1)]
@@ -103,6 +113,7 @@ class King(Piece):
     def __init__(self, y, x, team, board, screen):
         super().__init__(y, x, team, board, screen)
         self.image = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.board.sq_size, self.board.sq_size))
+        self.icon = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"),(self.icon_size, self.icon_size))
 
     def getMoves(self):
         dir = [(1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -120,7 +131,7 @@ class Rook(Piece):
     def __init__(self, y, x, team, board, screen):
         super().__init__(y, x, team, board, screen)
         self.image = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.board.sq_size, self.board.sq_size))
-
+        self.icon = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.icon_size, self.icon_size))
     def getMoves(self):
         dir = [(1, 0), (-1, 0), (0, 1), (0, -1)]
         self.available_moves.clear()
@@ -142,6 +153,7 @@ class Queen(Piece):
     def __init__(self, y, x, team, board, screen):
         super().__init__(y, x, team, board, screen)
         self.image = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.board.sq_size, self.board.sq_size))
+        self.icon = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.icon_size, self.icon_size))
 
     def getMoves(self):
         dir = [(1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -165,6 +177,7 @@ class Bishop(Piece):
     def __init__(self, y, x, team, board, screen):
         super().__init__(y, x, team, board, screen)
         self.image = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.board.sq_size, self.board.sq_size))
+        self.icon = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.icon_size, self.icon_size))
 
     def getMoves(self):
             dir = [(1,1), (1,-1), (-1,1), (-1,-1)]
