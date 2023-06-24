@@ -16,12 +16,12 @@ class Board():
     white_turn = True
     white_captured = []
     black_captured = []
-
+    settings_width = 200
 
     def __init__(self, pyg, screen):
         self.pygame = pyg
         self.screen = screen
-
+        self.setting_font = self.pygame.font.SysFont('Times New Roman', 25)
         self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -71,10 +71,46 @@ class Board():
                     p.draw.rect(self.screen, self.c1, p.Rect(i*60, j*60, 60, 60))
                 else:
                     p.draw.rect(self.screen, self.c2, p.Rect(i * 60, j * 60, 60, 60))
-
+        self.drawSettings()
         for e in self.entities:
             e.draw()
 
+
+    def drawSettings(self):
+        offset_x = self.sq_size * 8
+        self.pygame.draw.rect(self.screen, self.pygame.Color("gray"), self.pygame.Rect(offset_x, 0, self.settings_width, self.sq_size * 8))
+        white_pt_label = self.setting_font.render('White:', False, (0, 0, 0))
+        black_pt_label = self.setting_font.render('Black:', False, (0, 0, 0))
+        self.screen.blit(white_pt_label, (offset_x + 10, (self.sq_size*8)/8))
+        self.screen.blit(black_pt_label, (offset_x + 10, ((self.sq_size*8)/6)*3))
+
+        offset_x = offset_x + 10
+        offset_y = ((self.sq_size*8)/8) + 25
+        num_printed = 0
+        for p in self.white_captured:
+            p.draw_icon(offset_x, offset_y)
+            offset_x += 20
+            num_printed += 1
+            if num_printed > 7:
+                offset_y += 20
+                offset_x = self.sq_size * 8
+                offset_x = offset_x + 10
+                num_printed = 0
+
+        offset_x = self.sq_size * 8
+        offset_x = offset_x + 10
+        offset_y = ((self.sq_size * 8) / 6) * 3 + 25
+        num_printed = 0
+        for p in self.black_captured:
+            p.draw_icon(offset_x, offset_y)
+            offset_x += 20
+            num_printed += 1
+            if num_printed > 7:
+                offset_y += 20
+                offset_x = self.sq_size * 8
+                offset_x = offset_x + 10
+                num_printed = 0
+        return
 
     def select(self, pos):
         x, y = pos
@@ -88,10 +124,9 @@ class Board():
             if (self.white_turn and piece.team != "w") or (not self.white_turn and piece.team != "b"):
                 self.selected = None
                 return
-            print(f"selected: {piece}")
-            piece.move((y, x))
+            if piece.move((y, x)):
+                self.white_turn = not self.white_turn
             self.selected = None
-            self.white_turn = not self.white_turn
 
     def take_piece(self, attacker, tgt):
         piece = self.piece_lookup[tgt]
