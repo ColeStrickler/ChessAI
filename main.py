@@ -11,14 +11,10 @@ clock = p.time.Clock()
 b = Board(p, screen)
 
 
-
-
-while True:
+def GameLoop():
     b.draw_Board()
-   # b.get_Moves()
-
-
-
+    if b.white_turn:
+        b.AI_MakeMove()
     for e in p.event.get():
         if e.type == p.QUIT:
             break
@@ -26,10 +22,12 @@ while True:
             location = p.mouse.get_pos()
             b.select(location)
 
-
-
-
-
     clock.tick(15)
     p.display.flip()
+
+
+
+
+while True:
+    GameLoop()
 

@@ -3,7 +3,6 @@ import numpy as np
 
 
 class Piece():
-    available_moves = []
     type = ""
     image = None
     def __init__(self, y, x, team, board, screen):
@@ -13,9 +12,17 @@ class Piece():
         self.team = team
         self.icon_size = 25
         self.icon = None
+        self.available_moves = []
+
+    def moveValid(self, move):
+        if self.team == "b":
+            if move in self.board.black_moves:
+                return True
+        else:
+            if move in self.board.white_moves:
+                return True
 
     def move(self, tgt):
-        self.getMoves()
         if tgt in self.available_moves:
             y,x = self.pos
             self.board.board[y][x] = "  "
@@ -30,6 +37,24 @@ class Piece():
         else:
             return False
 
+
+    def override_move(self, tgt):
+        y,x = self.pos
+        ret = None
+        self.board.board[y][x] = "  "
+        if self.pos in self.board.piece_lookup:
+            self.board.piece_lookup.pop(self.pos)
+        if tgt in self.board.piece_lookup:
+            ret = self.board.piece_lookup[tgt]
+            self.board.entities.remove(ret)
+        self.board.piece_lookup[tgt] = self
+        self.pos = tgt
+        y, x = self.pos
+        self.board.board[y][x] = f"{self.team}{self.type}"
+        self.start = False
+        self.getMoves()
+        return ret
+
     def getMoves(self):
         return
 
@@ -40,7 +65,6 @@ class Piece():
     def draw_icon(self, x, y):
         rect = p.Rect(x, y, self.icon_size, self.icon_size)
         self.screen.blit(self.icon, rect)
-
 
 
 class Pawn(Piece):
@@ -66,13 +90,11 @@ class Pawn(Piece):
             d2 = [(1,-1), (-1, -1)]
             if self.start:
                 d1.append((0, -2))
-                self.start = False
         else:
             d1 = [(0, 1)]
             d2 = [(-1, 1), (1, 1)]
             if self.start:
                 d1.append((0, 2))
-                self.start = False
 
         for d in d1:
             x, y = d
@@ -84,14 +106,31 @@ class Pawn(Piece):
             x, y = d
             n = self.pos[1] + x
             m = self.pos[0] + y
-            if self.board.board[m][n][0] != self.team and self.board.board[m][n] != "  ":
+            if m < 8 and n < 8 and m >= 0 and n >= 0 and self.board.board[m][n][0] != self.team and self.board.board[m][n] != "  ":
                 self.available_moves.append((m, n))
 
+        return self.available_moves
+
+
+    def move(self, tgt):
+        if tgt in self.available_moves:
+            y,x = self.pos
+            self.board.board[y][x] = "  "
+            self.board.piece_lookup.pop(self.pos)
+            if tgt in self.board.piece_lookup:
+                self.board.take_piece(self, tgt)
+            self.board.piece_lookup[tgt] = self
+            self.pos = tgt
+            y, x = self.pos
+            self.board.board[y][x] = f"{self.team}{self.type}"
+            self.start = False
+            return True
+        else:
+            return False
 
 
 class Knight(Piece):
     type = "N"
-
     def __init__(self, y, x, team, board, screen):
         super().__init__(y, x, team, board, screen)
         self.image = p.transform.scale(p.image.load("assets/" + self.team + f"{self.type}.png"), (self.board.sq_size, self.board.sq_size))
@@ -106,7 +145,8 @@ class Knight(Piece):
             m = self.pos[0] + y
             if m < 8 and n < 8 and m >= 0 and n >= 0 and (self.board.board[m][n] == "  " or self.board.board[m][n][0] != self.team):
                 self.available_moves.append((m, n))
-        print(self.available_moves)
+        return self.available_moves
+
 
 class King(Piece):
     type = "K"
@@ -124,6 +164,47 @@ class King(Piece):
             m = self.pos[0] + y
             if m < 8 and n < 8 and m >= 0 and n >= 0 and (self.board.board[m][n] == "  " or self.board.board[m][n][0] != self.team):
                 self.available_moves.append((m, n))
+        return self.available_moves
+
+    def setKingLocation(self):
+        if self.team == "b":
+            self.board.blackKing_Location = self.pos
+        else:
+            self.board.whiteKing_Location = self.pos
+
+    def override_move(self, tgt):
+        y,x = self.pos
+        ret = False
+        self.board.board[y][x] = "  "
+        if self.pos in self.board.piece_lookup:
+            self.board.piece_lookup.pop(self.pos)
+        if tgt in self.board.piece_lookup:
+            ret = self.board.piece_lookup[tgt]
+            self.board.entities.remove(ret)
+        self.board.piece_lookup[tgt] = self
+        self.pos = tgt
+        y, x = self.pos
+        self.board.board[y][x] = f"{self.team}{self.type}"
+        self.start = False
+        self.setKingLocation()
+        self.getMoves()
+        return ret
+
+    def move(self, tgt):
+        if tgt in self.available_moves:
+            y,x = self.pos
+            self.board.board[y][x] = "  "
+            self.board.piece_lookup.pop(self.pos)
+            if tgt in self.board.piece_lookup:
+                self.board.take_piece(self, tgt)
+            self.board.piece_lookup[tgt] = self
+            self.pos = tgt
+            y, x = self.pos
+            self.board.board[y][x] = f"{self.team}{self.type}"
+            self.setKingLocation()
+            return True
+        else:
+            return False
 
 
 class Rook(Piece):
@@ -146,6 +227,7 @@ class Rook(Piece):
             if m < 8 and n < 8 and m >= 0 and n >= 0:
                 if self.board.board[m][n][0] != self.team:
                     self.available_moves.append((m, n))
+        return self.available_moves
 
 
 class Queen(Piece):
@@ -169,6 +251,7 @@ class Queen(Piece):
             if m < 8 and n < 8 and m >= 0 and n >= 0:
                 if self.board.board[m][n][0] != self.team:
                     self.available_moves.append((m, n))
+        return self.available_moves
 
 
 
@@ -194,5 +277,6 @@ class Bishop(Piece):
                 if m < 8 and n < 8 and m >= 0 and n >= 0:
                     if self.board.board[m][n][0] != self.team:
                         self.available_moves.append((m, n))
+            return self.available_moves
 
 
