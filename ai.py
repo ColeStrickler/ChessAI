@@ -4,7 +4,9 @@ import random
 import pygame as p
 
 
-
+"""
+MOVE RESOLUTION
+"""
 def ResolveMovesPawn(board, pos):
     y, x = pos
     team = board[y][x][0]
