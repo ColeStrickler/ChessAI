@@ -1,12 +1,12 @@
 import copy
 import random
+import sys
 
+import numpy as np
 import pygame as p
 
 
-"""
-MOVE RESOLUTION
-"""
+
 def ResolveMovesPawn(board, pos):
     y, x = pos
     team = board[y][x][0]
@@ -121,8 +121,6 @@ def ResolveMovesKing(board, pos):
             available_moves.append((m, n))
     return available_moves
 
-
-
 def ResolveMoves(board, pos):
     y,x = pos
     team = board[y][x][0]
@@ -141,12 +139,6 @@ def ResolveMoves(board, pos):
     elif type == "K":
         return ResolveMovesKing(board, pos)
 
-
-
-
-
-
-
 class AI():
     def __init__(self, board):
         self.board = board
@@ -159,17 +151,26 @@ class AI():
         self.ABSearch_Depth = 4
         self.maximizer_team = "w"
         self.minimizer_team = "b"
+        self.counter = 0
 
 
         """
         State Evaluation Hyperparameters
         """
-        self.king_val =     1000
+        self.king_val =     9
         self.queen_val =    8
         self.rook_val =     5
         self.bishop_val =   5
         self.knight_val =   3
         self.pawn_val =     1
+        self.scoreDict = {}
+        self.scoreDict["K"] = self.king_val
+        self.scoreDict["N"] = self.knight_val
+        self.scoreDict["p"] = self.pawn_val
+        self.scoreDict["R"] = self.rook_val
+        self.scoreDict["Q"] = self.queen_val
+        self.scoreDict["B"] = self.bishop_val
+
 
 
     def getMoves(self, board, team):
@@ -179,7 +180,6 @@ class AI():
             for n in range(len(board[0])):
                 if board[m][n] != "  " and board[m][n][0] == team:
                     moves_dict[(m,n)] = ResolveMoves(board, (m,n))
-
 
         return moves_dict
 
@@ -202,38 +202,86 @@ class AI():
         """
         best = -9999
 
+        return self.AB_Search(0, 0, depth=1)
+
+
+    def evaluateBoard(self, board):
+        score = 0
+        found = 0
+        for m in range(len(board)):
+            for n in range(len(board[0])):
+                if board[m][n] != '  ':
+                    team = board[m][n][0]
+                    type = board[m][n][1]
+                    if team == self.minimizer_team:
+                        score -= self.getScore(board[m][n])
+                    else:
+                        score += self.getScore(board[m][n])
+                        found += 1
+        return score
+
+
+    def getScore(self, tgt):
+        type = tgt[1]
+        return self.scoreDict[type]
+
+
+
+
+    def AB_Search(self, alpha, beta, depth):
         board = copy.deepcopy(self.board.board)
-        moves_dict = self.getMoves(board, self.maximizer_team)
-        choice = random.choice(list(moves_dict))
-        while len(moves_dict[choice]) == 0:
-            choice = random.choice(list(moves_dict))
-        #print(choice)
-
-        return (choice, moves_dict[choice][0])
+        utility, chosen_piece, chosen_move = self.AB_Max(alpha, beta, board, depth)
+        print(f"FINAL {chosen_piece}->{chosen_move} UTILITY: {utility}")
+        return (chosen_piece, chosen_move)
 
 
+    def SimMovePiece(self, board, src, src_val, tgt, tgt_val):
+        y,x = tgt
+        sy,sx = src
+        board[y][x] = tgt_val
+        board[sy][sx] = src_val
 
 
-
-        for move in self.moves:
-            start_alpha = 0
-            start_beta = 0
-            best_found = self.AB_Search(start_alpha, start_beta, depth=0)
-
-
-
-        return move
-
-
-    def AB_Search(self, alpha, beta, depth, score):
-
-        board = copy.deepcopy(self.board.board)
-
-        return self.AB_Max(alpha, beta, board, depth, score)
 
     def AB_Max(self, alpha, beta, board, depth):
+        if depth == self.ABSearch_Depth:
+            return (self.evaluateBoard(board), (), ())
+        moves_dict = self.getMoves(board, self.maximizer_team)
+        utility_max = -999999
+        chosen_move = ()
+        chosen_piece = ()
+        for piece in moves_dict:
+            for p in moves_dict[piece]:
+                piece_val = board[piece[0]][piece[1]]
+                old_val = board[p[0]][p[1]]
+                self.SimMovePiece(board=board, src=piece, src_val="  ", tgt=p, tgt_val=piece_val)
+                utility, cp, cm = self.AB_Min(alpha, beta, board, depth + 1)
+                if utility > utility_max:
+                    utility_max = utility
+                    chosen_move = p
+                    chosen_piece = piece
+                self.SimMovePiece(board, p, src_val=old_val, tgt=piece, tgt_val=piece_val)
+        return utility_max, chosen_piece, chosen_move
 
-        self.AB_Min(alpha, beta, board, depth + 1)
+
 
     def AB_Min(self, alpha, beta, board, depth):
-        self.AB_Max(alpha, beta, board, depth + 1)
+        if depth == self.ABSearch_Depth:
+            return (self.evaluateBoard(board), (), ())
+        moves_dict = self.getMoves(board, self.minimizer_team)
+        utility_min = 999999
+        chosen_move = ()
+        chosen_piece = ()
+        for piece in moves_dict:
+            for p in moves_dict[piece]:
+                piece_val = board[piece[0]][piece[1]]
+                old_val = board[p[0]][p[1]]
+                self.SimMovePiece(board=board, src=piece, src_val="  ", tgt=p, tgt_val=piece_val)
+                utility, cp, cm = self.AB_Max(alpha, beta, board, depth + 1)
+                if utility < utility_min:
+                    utility_min = utility
+                    chosen_move = p
+                    chosen_piece = piece
+                self.SimMovePiece(board, p, src_val=old_val, tgt=piece, tgt_val=piece_val)
+        return utility_min, chosen_piece, chosen_move
+

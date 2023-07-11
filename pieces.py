@@ -130,6 +130,7 @@ class Pawn(Piece):
             self.start = False
             return True
         else:
+            print("not in available moves")
             return False
 
 
