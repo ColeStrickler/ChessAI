@@ -2,6 +2,10 @@ import pygame as p
 import numpy as np
 
 
+"""
+PIECE CLASSES --> ONLY USED INTERNAL TO THE BOARD CLASS
+"""
+
 class Piece():
     type = ""
     image = None
