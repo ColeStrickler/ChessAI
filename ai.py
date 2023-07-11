@@ -7,10 +7,6 @@ import pygame as p
 
 
 
-
-"""
-We will implement a move ordering function within these
-"""
 def ResolveMovesPawn(board, pos):
     y, x = pos
     team = board[y][x][0]
