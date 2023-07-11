@@ -35,7 +35,9 @@ class Board():
         self.pygame = pyg
         self.screen = screen
         self.setting_font = self.pygame.font.SysFont('Times New Roman', 25)
-        self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
+
+        """
+            self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -43,9 +45,11 @@ class Board():
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
                       ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]]
+        """
+
         self.ai = AI(self)
 
-        """
+
         self.board = [["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -53,8 +57,8 @@ class Board():
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["wR", "wR", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "bK", "  ", "  ", "  ", "  ", "  "]]
-        """
+                      ["  ", "  ", "bR", "  ", "  ", "  ", "  ", "  "]]
+
 
 
         # Spawn piece entities
@@ -101,10 +105,10 @@ class Board():
         piece = self.piece_lookup[piece_loc]
         #print(f"AI Selected {piece} --> {move}")
 
-        self.checkGameOver()
+
         if piece.move(move):
             self.white_turn = not self.white_turn
-
+            self.checkGameOver()
 
 
 
@@ -195,9 +199,6 @@ class Board():
                 print("BLACK WINS!")
             else:
                 print("WHITE WINS!")
-
-
-
 
 
     """
