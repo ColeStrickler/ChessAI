@@ -166,31 +166,28 @@ class AI():
         self.scoreDict["Q"] = self.queen_val
         self.scoreDict["B"] = self.bishop_val
 
-
-
     """
     Move retrieval and Evaluation Functions
     
     NOTE: Beam Search is implemented within ResolveMoves()
     """
-    def ResolveMoves(self, board, pos, score_dict):
+    def ResolveMoves(self, board, pos):
         y,x = pos
         team = board[y][x][0]
         type = board[y][x][1]
 
         if type == "p":
-            return OrderMoves(ResolveMovesPawn(board, pos), board, score_dict)[0:1]
+            return OrderMoves(ResolveMovesPawn(board, pos), board, self.scoreDict)[0:1]
         elif type == "R":
-            return OrderMoves(ResolveMovesRook(board, pos), board, score_dict)
+            return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict)
         elif type == "N":
-            return OrderMoves(ResolveMovesKnight(board, pos), board, score_dict)[0:2]
+            return OrderMoves(ResolveMovesKnight(board, pos), board, self.scoreDict)[0:2]
         elif type == "B":
-            return OrderMoves(ResolveMovesBishop(board, pos), board, score_dict)[0:3]
+            return OrderMoves(ResolveMovesBishop(board, pos), board, self.scoreDict)[0:3]
         elif type == "Q":
-            return OrderMoves(ResolveMovesQueen(board, pos), board, score_dict)[0:3]
+            return OrderMoves(ResolveMovesQueen(board, pos), board, self.scoreDict)[0:3]
         elif type == "K":
-            return OrderMoves(ResolveMovesKing(board, pos), board, score_dict)[0:5]
-
+            return OrderMoves(ResolveMovesKing(board, pos), board, self.scoreDict)[0:5]
 
     def getMoves(self, board, team):
         moves_dict = {}
@@ -198,25 +195,20 @@ class AI():
         for m in range(len(board)):
             for n in range(len(board[0])):
                 if board[m][n] != "  " and board[m][n][0] == team:
-                    moves = self.ResolveMoves(board, (m,n), self.scoreDict)
+                    moves = self.ResolveMoves(board, (m,n))
                     moves_dict[(m,n)] = moves
                     moves_list += moves
         return moves_dict, moves_list
 
-
     def MakeMove(self):
         if self.strategy == 1:
             return self.GameTreeSearch()
-
 
     def SimMovePiece(self, board, src, src_val, tgt, tgt_val):
         y,x = tgt
         sy,sx = src
         board[y][x] = tgt_val
         board[sy][sx] = src_val
-
-
-
 
     """
     Heuristic Evaluation Functions
@@ -241,13 +233,12 @@ class AI():
                         found += 1
         return score
 
-
+    """
+    Wrapper function for retrieving scores
+    """
     def getScore(self, tgt):
         type = tgt[1]
         return self.scoreDict[type]
-
-
-
 
     """
     Heuristic Alpha-Beta Minimax
