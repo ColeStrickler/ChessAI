@@ -169,11 +169,9 @@ class AI():
 
 
     """
-    Beam Search is implemented within ResolveMoves()
-
-
-    NOTE: Need to add an isCheck() move filter here so when in check only valid moves exist. When there is no moves we will
-    know it is checkmate and can apply the evaluation.
+    Move retrieval and Evaluation Functions
+    
+    NOTE: Beam Search is implemented within ResolveMoves()
     """
     def ResolveMoves(self, board, pos, score_dict):
         y,x = pos
@@ -211,22 +209,18 @@ class AI():
             return self.GameTreeSearch()
 
 
-
-    def GameTreeSearch(self):
-        move = ((),())
-        """
-        This method is a variation of Heuristic Alpha-Beta Tree Search.
-        Our variation of the algorithm includes:
-        1. Transposition Tables -> Avoid some repeated computation
-        2. Cutoff Search -> We specify a depth limited cutoff
-        3. Beam Search -> We only consider n best moves
-        4. Pieces are valued during state evaluation based on total weight
-        """
-        best = -9999
-
-        return self.AB_Search(-99999, 99999, depth=0)
+    def SimMovePiece(self, board, src, src_val, tgt, tgt_val):
+        y,x = tgt
+        sy,sx = src
+        board[y][x] = tgt_val
+        board[sy][sx] = src_val
 
 
+
+
+    """
+    Heuristic Evaluation Functions
+    """
     def evaluateBoard(self, board, checkmate, team):
         if checkmate:
             if team == self.maximizer_team:
@@ -255,33 +249,51 @@ class AI():
 
 
 
+    """
+    Heuristic Alpha-Beta Minimax
+    """
+    def GameTreeSearch(self):
+        move = ((),())
+        """
+        This method is a variation of Heuristic Alpha-Beta Tree Search.
+        Our variation of the algorithm includes:
+        1. Transposition Tables -> Avoid some repeated computation
+        2. Cutoff Search -> We specify a depth limited cutoff
+        3. Beam Search -> We only consider n best moves
+        4. Pieces are valued during state evaluation based on total weight
+        
+        
+        Alpha = Max bound, Beta = Min Bound
+        """
+        best = -9999
 
+        return self.AB_Search(-99999, 99999, depth=0)
 
     """
-    Alpha = Max bound, Beta = Min Bound
+    GetAB_Board is a helper/wrapper function that retrieves some info used in the heuristic search tree
     """
-
-
     def GetAB_Board(self):
         board = copy.deepcopy(self.board.board)
         return board, self.board.whiteKing_Location, self.board.blackKing_Location
 
 
+    """
+    This is a wrapper function that will format the result of the heuristic search into a format acceptable
+    by the board.AI_MakeMove() function
+    """
     def AB_Search(self, alpha, beta, depth):
         board, white_king_loc, black_king_loc = self.GetAB_Board()
         utility, chosen_piece, chosen_move = self.AB_Max(alpha, beta, board, depth, white_king_loc, black_king_loc, [])
-        print(f"FINAL {chosen_piece}->{chosen_move} UTILITY: {utility}")
         return (chosen_piece, chosen_move)
 
-
-    def SimMovePiece(self, board, src, src_val, tgt, tgt_val):
-        y,x = tgt
-        sy,sx = src
-        board[y][x] = tgt_val
-        board[sy][sx] = src_val
-
-
-
+    """
+    
+    checkMoveFilter() will do the following:
+    1. See if the current player is currently in check
+    2. If so, we test every one of our possible moves and see if it will get us out of check
+    3. If it will we keep that move, if not we will discard it
+    
+    """
     def checkMoveFilter(self, board, curr_team, currMoves, enemy_team, enemyMoves, king_loc):
         if king_loc in enemyMoves:
             for src in currMoves.keys():
@@ -299,10 +311,9 @@ class AI():
                     self.SimMovePiece(board, move, tgt_val, src, src_val)
 
 
-
-
-
-
+    """
+    Heuristic Search maximizer function
+    """
     def AB_Max(self, alpha, beta, board, depth, wk_Loc, bk_Loc, prev_movList):
         if depth == self.ABSearch_Depth:
             return (self.evaluateBoard(board, False, self.maximizer_team), (), ())
@@ -346,8 +357,9 @@ class AI():
                 break
         return utility_max, chosen_piece, chosen_move
 
-
-
+    """
+    Heuristic Search minimizer function
+    """
     def AB_Min(self, alpha, beta, board, depth, wk_Loc, bk_Loc, prev_movList):
         if depth == self.ABSearch_Depth:
             return (self.evaluateBoard(board, False, self.minimizer_team), (), ())
