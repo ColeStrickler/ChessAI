@@ -35,9 +35,7 @@ class Board():
         self.pygame = pyg
         self.screen = screen
         self.setting_font = self.pygame.font.SysFont('Times New Roman', 25)
-
-        """
-            self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
+        self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -46,10 +44,7 @@ class Board():
                       ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
                       ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]]
         """
-
-        self.ai = AI(self)
-
-
+        TEST BOARD
         self.board = [["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -58,6 +53,14 @@ class Board():
                       ["wR", "wR", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["  ", "  ", "bR", "  ", "  ", "  ", "  ", "  "]]
+        
+        
+        """
+
+        self.ai = AI(self)
+
+
+
 
 
 

@@ -30,4 +30,3 @@ def GameLoop():
 
 while True:
     GameLoop()
-

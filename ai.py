@@ -7,6 +7,22 @@ import pygame as p
 
 
 
+def MoveEvalFunc(board, move, score_dict):
+    y, x = move
+    team = board[y][x][0]
+    type = board[y][x][1]
+    if type == " ":
+        return 0
+    return score_dict[type]
+
+
+"""
+CUTTING OUT ONLY THE TOP FIVE MOVES --> EXPERIMENTAL
+"""
+def OrderMoves(available_moves, board, score_dict):
+    available_moves.sort(key=lambda x: MoveEvalFunc(board, x, score_dict), reverse=True)
+    return available_moves
+
 def ResolveMovesPawn(board, pos):
     y, x = pos
     team = board[y][x][0]
@@ -121,23 +137,23 @@ def ResolveMovesKing(board, pos):
             available_moves.append((m, n))
     return available_moves
 
-def ResolveMoves(board, pos):
+def ResolveMoves(board, pos, score_dict):
     y,x = pos
     team = board[y][x][0]
     type = board[y][x][1]
 
     if type == "p":
-        return ResolveMovesPawn(board, pos)
+        return OrderMoves(ResolveMovesPawn(board, pos), board, score_dict)[0:1]
     elif type == "R":
-        return ResolveMovesRook(board, pos)
+        return OrderMoves(ResolveMovesRook(board, pos), board, score_dict)[0:3]
     elif type == "N":
-        return ResolveMovesKnight(board, pos)
+        return OrderMoves(ResolveMovesKnight(board, pos), board, score_dict)[0:2]
     elif type == "B":
-        return ResolveMovesBishop(board, pos)
+        return OrderMoves(ResolveMovesBishop(board, pos), board, score_dict)[0:3]
     elif type == "Q":
-        return ResolveMovesQueen(board, pos)
+        return OrderMoves(ResolveMovesQueen(board, pos), board, score_dict)[0:3]
     elif type == "K":
-        return ResolveMovesKing(board, pos)
+        return OrderMoves(ResolveMovesKing(board, pos), board, score_dict)[0:5]
 
 class AI():
     def __init__(self, board):
@@ -148,7 +164,7 @@ class AI():
         """
         Alpha/Beta Search Options
         """
-        self.ABSearch_Depth = 4
+        self.ABSearch_Depth = 6
         self.maximizer_team = "w"
         self.minimizer_team = "b"
         self.counter = 0
@@ -179,7 +195,7 @@ class AI():
         for m in range(len(board)):
             for n in range(len(board[0])):
                 if board[m][n] != "  " and board[m][n][0] == team:
-                    moves_dict[(m,n)] = ResolveMoves(board, (m,n))
+                    moves_dict[(m,n)] = ResolveMoves(board, (m,n), self.scoreDict)
 
         return moves_dict
 
@@ -202,7 +218,7 @@ class AI():
         """
         best = -9999
 
-        return self.AB_Search(0, 0, depth=1)
+        return self.AB_Search(-99999, 99999, depth=0)
 
 
     def evaluateBoard(self, board):
@@ -226,6 +242,13 @@ class AI():
         return self.scoreDict[type]
 
 
+
+
+
+
+    """
+    Alpha = Max bound, Beta = Min Bound
+    """
 
 
     def AB_Search(self, alpha, beta, depth):
@@ -256,11 +279,20 @@ class AI():
                 old_val = board[p[0]][p[1]]
                 self.SimMovePiece(board=board, src=piece, src_val="  ", tgt=p, tgt_val=piece_val)
                 utility, cp, cm = self.AB_Min(alpha, beta, board, depth + 1)
+
+                """ALPHA BETA PRUNING"""
+                alpha = max(alpha, utility)
                 if utility > utility_max:
                     utility_max = utility
                     chosen_move = p
                     chosen_piece = piece
+                if beta <= alpha:
+                    self.SimMovePiece(board, p, src_val=old_val, tgt=piece, tgt_val=piece_val)
+                    break
+                """ALPHA BETA PRUNING"""
                 self.SimMovePiece(board, p, src_val=old_val, tgt=piece, tgt_val=piece_val)
+            if beta <= alpha:
+                break
         return utility_max, chosen_piece, chosen_move
 
 
@@ -278,10 +310,19 @@ class AI():
                 old_val = board[p[0]][p[1]]
                 self.SimMovePiece(board=board, src=piece, src_val="  ", tgt=p, tgt_val=piece_val)
                 utility, cp, cm = self.AB_Max(alpha, beta, board, depth + 1)
+
+                """ALPHA BETA PRUNING"""
+                beta = min(utility, beta)
                 if utility < utility_min:
                     utility_min = utility
                     chosen_move = p
                     chosen_piece = piece
+                if beta <= alpha:
+                    self.SimMovePiece(board, p, src_val=old_val, tgt=piece, tgt_val=piece_val)
+                    break
+                """ALPHA BETA PRUNING"""
                 self.SimMovePiece(board, p, src_val=old_val, tgt=piece, tgt_val=piece_val)
+            if beta <= alpha:
+                break
         return utility_min, chosen_piece, chosen_move
 
