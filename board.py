@@ -35,6 +35,18 @@ class Board():
         self.pygame = pyg
         self.screen = screen
         self.setting_font = self.pygame.font.SysFont('Times New Roman', 25)
+
+
+        self.board = [["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["wR", "wR", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "bK", "  ", "  ", "  ", "  ", "  "]]
+        """
+        TEST BOARD
         self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -43,16 +55,6 @@ class Board():
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
                       ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]]
-        """
-        TEST BOARD
-        self.board = [["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["wR", "wR", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "bR", "  ", "  ", "  ", "  ", "  "]]
         
         
         """
@@ -153,8 +155,6 @@ class Board():
             self.check = False
         return self.check
 
-
-
     def ValidOOC_Moves(self, entity):
         """
            This method will test a move to see if it gets the player out of check. This method is used to filter out invalid
@@ -176,6 +176,10 @@ class Board():
 
     def checkGameState(self):
         self.getValidMoves()
+
+        if len(self.white_moves) == 0 or len(self.black_moves) == 0:
+            return True
+
         if self.isCheck():
             if self.white_turn:
                 valid_moves = []
@@ -192,6 +196,7 @@ class Board():
                         valid_moves += self.ValidOOC_Moves(e)
                 self.getValidMoves()
                 self.black_moves = valid_moves
+                print(valid_moves)
                 return len(self.black_moves) == 0
         return False
 

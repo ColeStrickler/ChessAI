@@ -167,6 +167,15 @@ class King(Piece):
             x, y = d
             n = self.pos[1] + x
             m = self.pos[0] + y
+            if self.team == "w":
+                if (m,n) in self.board.black_moves:
+                    continue
+            else:
+                if (m,n) in self.board.white_moves:
+                    continue
+
+
+
             if m < 8 and n < 8 and m >= 0 and n >= 0 and (self.board.board[m][n] == "  " or self.board.board[m][n][0] != self.team):
                 self.available_moves.append((m, n))
         return self.available_moves
