@@ -92,12 +92,12 @@ class Pawn(Piece):
         if self.direction == 1:
             d1 = [(0, -1)]
             d2 = [(1,-1), (-1, -1)]
-            if self.start:
+            if self.start and self.board.board[self.pos[0] + d1[0][1]][self.pos[1] + d1[0][0]] == "  ":
                 d1.append((0, -2))
         else:
             d1 = [(0, 1)]
             d2 = [(-1, 1), (1, 1)]
-            if self.start:
+            if self.start and self.board.board[self.pos[0] + d1[0][1]][self.pos[1] + d1[0][0]] == "  ":
                 d1.append((0, 2))
 
         for d in d1:

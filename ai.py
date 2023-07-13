@@ -29,12 +29,12 @@ def ResolveMovesPawn(board, pos):
     if team == "b":
         d1 = [(0, -1)]
         d2 = [(1, -1), (-1, -1)]
-        if start:
+        if start and board[pos[0] + d1[0][1]][pos[1] + d1[0][0]] == "  ":
             d1.append((0, -2))
     else:
         d1 = [(0, 1)]
         d2 = [(-1, 1), (1, 1)]
-        if start:
+        if start and board[pos[0] + d1[0][1]][pos[1] + d1[0][0]] == "  ":
             d1.append((0, 2))
 
     for d in d1:
@@ -179,7 +179,7 @@ class AI():
         if type == "p":
             return OrderMoves(ResolveMovesPawn(board, pos), board, self.scoreDict)[0:1]
         elif type == "R":
-            return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict)
+            return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict)[0:3]
         elif type == "N":
             return OrderMoves(ResolveMovesKnight(board, pos), board, self.scoreDict)[0:2]
         elif type == "B":
