@@ -6,6 +6,14 @@ import numpy as np
 PIECE CLASSES --> ONLY USED INTERNAL TO THE BOARD CLASS
 """
 
+
+
+"""
+SWITCH MOVES IN BOARD TO USING A DICTIONARY FORMAT, IT IS MUCH BETTER THAN THE CURRENT
+
+
+"""
+
 class Piece():
     type = ""
     image = None
@@ -27,6 +35,17 @@ class Piece():
                 return True
 
     def move(self, tgt):
+        try:
+            if self.team == "w":
+                if tgt not in self.board.white_moves[self.pos]:
+                    return False
+            else:
+                if tgt not in self.board.black_moves[self.pos]:
+                    return False
+        except Exception as e:
+            print(f"exception: {e}")
+            return False
+
         if tgt in self.available_moves:
             y,x = self.pos
             self.board.board[y][x] = "  "
@@ -117,6 +136,16 @@ class Pawn(Piece):
 
 
     def move(self, tgt):
+        try:
+            if self.team == "w":
+                if tgt not in self.board.white_moves[self.pos]:
+                    return False
+            else:
+                if tgt not in self.board.black_moves[self.pos]:
+                    return False
+        except Exception as e:
+            return False
+
         if tgt in self.available_moves:
             y,x = self.pos
             self.board.board[y][x] = "  "
@@ -167,17 +196,10 @@ class King(Piece):
             x, y = d
             n = self.pos[1] + x
             m = self.pos[0] + y
-            if self.team == "w":
-                if (m,n) in self.board.black_moves:
-                    continue
-            else:
-                if (m,n) in self.board.white_moves:
-                    continue
-
-
 
             if m < 8 and n < 8 and m >= 0 and n >= 0 and (self.board.board[m][n] == "  " or self.board.board[m][n][0] != self.team):
                 self.available_moves.append((m, n))
+        #print(self.available_moves)
         return self.available_moves
 
     def setKingLocation(self):
@@ -186,25 +208,17 @@ class King(Piece):
         else:
             self.board.whiteKing_Location = self.pos
 
-    def override_move(self, tgt):
-        y,x = self.pos
-        ret = False
-        self.board.board[y][x] = "  "
-        if self.pos in self.board.piece_lookup:
-            self.board.piece_lookup.pop(self.pos)
-        if tgt in self.board.piece_lookup:
-            ret = self.board.piece_lookup[tgt]
-            self.board.entities.remove(ret)
-        self.board.piece_lookup[tgt] = self
-        self.pos = tgt
-        y, x = self.pos
-        self.board.board[y][x] = f"{self.team}{self.type}"
-        self.start = False
-        self.setKingLocation()
-        self.getMoves()
-        return ret
 
     def move(self, tgt):
+        try:
+            if self.team == "w":
+                if tgt not in self.board.white_moves[self.pos]:
+                    return False
+            else:
+                if tgt not in self.board.black_moves[self.pos]:
+                    return False
+        except Exception as e:
+            return False
         if tgt in self.available_moves:
             y,x = self.pos
             self.board.board[y][x] = "  "

@@ -1,4 +1,7 @@
 import copy
+import itertools
+
+from ai import ResolveMovesKing, ResolveMovesKnight, ResolveMovesQueen, ResolveMovesBishop, ResolveMovesPawn, ResolveMovesRook
 import math
 import time
 import random
@@ -14,20 +17,25 @@ class Board():
     turn = False
     c1 = (227, 213, 179)
     c2 = (194, 147, 29)
+    select_c3 = (255, 255, 0, 128)
     sq_size = 60
     piece_lookup = {}
     selected = None
 
     check = False
+    ai_thinking = False
+
+
+
 
     white_turn = True
     white_captured = []
-    white_moves = []
+    white_moves = {}
     whiteKing_Location = ()
 
 
 
-    black_moves = []
+    black_moves = {}
     black_captured = []
     blackKing_Location = ()
 
@@ -35,7 +43,23 @@ class Board():
         self.pygame = pyg
         self.screen = screen
         self.setting_font = self.pygame.font.SysFont('Times New Roman', 25)
+        self.message_font = self.pygame.font.SysFont('Times New Roman', 15)
 
+
+        self.board = [["  ", "  ", "  ", "  ", "wK", "wB", "wN", "wR"],
+                      ["wp", "wp", "wp", "  ", "  ", "  ", "wp", "wp"],
+                      ["  ", "  ", "  ", "wR", "wp", "wp", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "bK", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "wB"],
+                      ["bp", "bp", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["wN", "bN", "wQ", "  ", "  ", "  ", "  ", "  "],]
+
+
+        """
+        TEST BOARD
+        
+        
         self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -44,12 +68,6 @@ class Board():
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
                       ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]]
-
-        """
-        TEST BOARD
-        
-        
-        
         self.board = [["wR", "  ", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "  ", "wp", "wp", "wp"],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -70,10 +88,10 @@ class Board():
         
         """
 
-        self.ai = AI(self)
-
-
-
+        self.ai = AI(self, search_depth=6)
+        self.text_location = (self.screen.get_width() - self.settings_width + 15, self.screen.get_height() - 150)
+        self.loading_texts = ["AI is thinking", "AI is thinking.", "AI is thinking..", "AI is thinking...", "AI is thinking...."]
+        self.loading_texts_index = 0
 
 
 
@@ -115,16 +133,18 @@ class Board():
 
     """
     AI CONTROL WRAPPERS
+    
+    
+    Need to add the Game Over check again
     """
     def AI_MakeMove(self):
         piece_loc, move = self.ai.MakeMove()
         piece = self.piece_lookup[piece_loc]
-        #print(f"AI Selected {piece} --> {move}")
-
-
         if piece.move(move):
             self.white_turn = not self.white_turn
             self.checkGameOver()
+            self.setAIThinking()
+
 
 
 
@@ -134,6 +154,16 @@ class Board():
     """
     GAME STATE FUNCTIONS
     """
+
+    def setAIThinking(self):
+        self.ai_thinking = not self.ai_thinking
+
+
+    def SimMovePiece(self, board, src, src_val, tgt, tgt_val):
+        y,x = tgt
+        sy,sx = src
+        board[y][x] = tgt_val
+        board[sy][sx] = src_val
 
     def set_KingLocation(self, team, pos):
         if team == "b":
@@ -155,68 +185,65 @@ class Board():
 
         for e in self.entities:
             if e.team == "b":
-                self.black_moves += e.getMoves()
+                self.black_moves[e.pos] = e.getMoves()
             else:
-                self.white_moves += e.getMoves()
+                self.white_moves[e.pos] = e.getMoves()
 
-    def isCheck(self):
-        if self.whiteKing_Location in self.black_moves or self.blackKing_Location in self.white_moves:
-            self.check = True
-        else:
-            self.check = False
-        return self.check
 
-    def ValidOOC_Moves(self, entity):
-        """
-           This method will test a move to see if it gets the player out of check. This method is used to filter out invalid
-           moves during a state of check inside the method call checkGameState().
-        """
-        valid_moves = []
-        for m in entity.available_moves:
-            backtrack = entity.pos
-            placeback_entity = entity.override_move(m)
-            self.getValidMoves()
-            if not self.isCheck():
-                valid_moves.append(m)
-            entity.override_move(backtrack)
-            if placeback_entity:  # if we captured an entity, place it back
-                self.entities.append(placeback_entity)
-                placeback_entity.override_move(m)
-                placeback_entity.getMoves()
-        return valid_moves
+
+
+
+
+
+    """
+
+       checkMoveFilter() will do the following:
+       1. See if the current player is currently in check
+       2. If so, we test every one of our possible moves and see if it will get us out of check
+       3. If it will we keep that move, if not we will discard it
+
+       """
+
+    def checkMoveFilter(self, board, curr_team, currMoves, enemy_team, enemyMoves, king_loc):
+        keys = list(currMoves.keys())
+        old_king_loc = copy.deepcopy(king_loc)
+        for src in keys:
+            src_y, src_x = src
+            src_val = board[src_y][src_x]
+            c_moves = copy.deepcopy(currMoves[src])
+            for move in c_moves:
+                tgt_y, tgt_x = move
+                tgt_val = board[tgt_y][tgt_x]
+                if (src_y, src_x) == king_loc:
+                    # print("found")
+                    king_loc = move
+                self.SimMovePiece(board, src, "  ", move, src_val)
+                m_dict, next_turnEnemyMoves = self.ai.getMoves(board, enemy_team, beam_search=False)
+                if king_loc in next_turnEnemyMoves:
+                    currMoves[src].remove(move)
+                king_loc = old_king_loc
+                self.SimMovePiece(board, move, tgt_val, src, src_val)
+            if len(currMoves[src]) == 0:
+                currMoves.pop(src)
+
 
     def checkGameState(self):
         self.getValidMoves()
-
-        if len(self.white_moves) == 0 or len(self.black_moves) == 0:
-            return True
-
-        if self.isCheck():
-            if self.white_turn:
-                valid_moves = []
-                for e in self.entities:
-                    if e.team == "w":
-                        valid_moves += self.ValidOOC_Moves(e)
-                self.white_moves = valid_moves
-                return len(self.white_moves) == 0
-            else:
-                valid_moves = []
-                for e in self.entities:
-                    self.getValidMoves()
-                    if e.team == "b":
-                        valid_moves += self.ValidOOC_Moves(e)
-                self.getValidMoves()
-                self.black_moves = valid_moves
-                print(valid_moves)
-                return len(self.black_moves) == 0
-        return False
-
+        board = copy.deepcopy(self.board)
+        black_moves, black_moves_list = self.ai.getMoves(board, "b", beam_search=False)
+        board = copy.deepcopy(self.board)
+        white_moves, white_moves_list = self.ai.getMoves(board, "w", beam_search=False)
+        self.checkMoveFilter(board, "w", white_moves, "b", black_moves_list, self.whiteKing_Location)
+        self.checkMoveFilter(board, "b", black_moves, "w", white_moves_list, self.blackKing_Location)
+        self.white_moves = white_moves
+        self.black_moves = black_moves
+        return len(self.black_moves) == 0 or len(self.white_moves) == 0
 
     def checkGameOver(self):
         if self.checkGameState():
-            if self.white_turn:
+            if len(self.white_moves) == 0:
                 print("BLACK WINS!")
-            else:
+            elif len(self.black_moves) == 0:
                 print("WHITE WINS!")
 
 
@@ -236,17 +263,7 @@ class Board():
             if self.white_turn or piece.team == "w":
                 self.selected = None
                 return
-
-
-
-            if self.white_turn:
-                if (y,x) not in self.white_moves:
-                    return False
-            else:
-                if (y,x) not in self.black_moves:
-                    return False
-
-
+            self.checkGameOver()
             if piece.move((y, x)):
                 self.white_turn = not self.white_turn
                 self.checkGameOver()
@@ -255,6 +272,23 @@ class Board():
     """
     Graphics/Draw Functions
     """
+    def drawAccessoryTexts(self):
+        if self.ai_thinking:
+            load_text = self.message_font.render(self.loading_texts[self.loading_texts_index], False, (0,0,0))
+            self.loading_texts_index += 1
+            self.loading_texts_index %= 4
+            self.screen.blit(load_text, self.text_location)
+
+    def drawSelected(self):
+        if self.selected:
+            y,x = self.selected
+            y *= self.sq_size
+            x *= self.sq_size
+            selection_surface = self.pygame.Surface((self.sq_size, self.sq_size), self.pygame.SRCALPHA)
+            selection_surface.fill(self.select_c3)
+            self.screen.blit(selection_surface, (x,y))
+
+
 
     def draw_Board(self):
         for i in range(8):
@@ -264,6 +298,8 @@ class Board():
                 else:
                     p.draw.rect(self.screen, self.c2, p.Rect(i * 60, j * 60, 60, 60))
         self.drawSettings()
+        self.drawSelected()
+        self.drawAccessoryTexts()
         for e in self.entities:
             e.draw()
 

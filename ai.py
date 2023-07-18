@@ -16,8 +16,10 @@ def MoveEvalFunc(board, move, score_dict):
     return score_dict[type]
 
 def OrderMoves(available_moves, board, score_dict):
-    available_moves.sort(key=lambda x: MoveEvalFunc(board, x, score_dict), reverse=True)
-    return available_moves
+    if len(available_moves):
+        available_moves.sort(key=lambda x: MoveEvalFunc(board, x, score_dict), reverse=True)
+        return available_moves
+    return []
 
 def ResolveMovesPawn(board, pos):
     y, x = pos
@@ -120,7 +122,7 @@ def ResolveMovesQueen(board, pos):
                 available_moves.append((m, n))
     return available_moves
 
-def ResolveMovesKing(board, pos):
+def ResolveMovesKing(board, pos, f=False):
     y, x = pos
     team = board[y][x][0]
     dir = [(1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -135,7 +137,7 @@ def ResolveMovesKing(board, pos):
 
 
 class AI():
-    def __init__(self, board):
+    def __init__(self, board, search_depth=6, team="w"):
         self.board = board
         self.strategy = 1               # Initial Strategy is Game Tree Search
 
@@ -143,10 +145,12 @@ class AI():
         """
         Alpha/Beta Search Options
         """
-        self.ABSearch_Depth = 6
-        self.maximizer_team = "w"
-        self.minimizer_team = "b"
-        self.counter = 0
+        self.ABSearch_Depth = search_depth
+        self.maximizer_team = team
+        if team == "w":
+            self.minimizer_team = "b"
+        else:
+            self.minimizer_team = "w"
 
 
         """
@@ -171,33 +175,49 @@ class AI():
     
     NOTE: Beam Search is implemented within ResolveMoves()
     """
-    def ResolveMoves(self, board, pos):
+    def ResolveMoves(self, board, pos, beam_search=True):
         y,x = pos
         team = board[y][x][0]
         type = board[y][x][1]
 
-        if type == "p":
-            return OrderMoves(ResolveMovesPawn(board, pos), board, self.scoreDict)[0:1]
-        elif type == "R":
-            return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict)[0:3]
-        elif type == "N":
-            return OrderMoves(ResolveMovesKnight(board, pos), board, self.scoreDict)[0:2]
-        elif type == "B":
-            return OrderMoves(ResolveMovesBishop(board, pos), board, self.scoreDict)[0:3]
-        elif type == "Q":
-            return OrderMoves(ResolveMovesQueen(board, pos), board, self.scoreDict)[0:3]
-        elif type == "K":
-            return OrderMoves(ResolveMovesKing(board, pos), board, self.scoreDict)[0:5]
+        if beam_search:
+            if type == "p":
+                return OrderMoves(ResolveMovesPawn(board, pos), board, self.scoreDict)[0:1]
+            elif type == "R":
+                return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict)[0:3]
+            elif type == "N":
+                return OrderMoves(ResolveMovesKnight(board, pos), board, self.scoreDict)[0:2]
+            elif type == "B":
+                return OrderMoves(ResolveMovesBishop(board, pos), board, self.scoreDict)[0:3]
+            elif type == "Q":
+                return OrderMoves(ResolveMovesQueen(board, pos), board, self.scoreDict)[0:3]
+            elif type == "K":
+                return OrderMoves(ResolveMovesKing(board, pos), board, self.scoreDict)[0:5]
+        else:
+            if type == "p":
+                return ResolveMovesPawn(board, pos)
+            elif type == "R":
+                return ResolveMovesRook(board, pos)
+            elif type == "N":
+                return ResolveMovesKnight(board, pos)
+            elif type == "B":
+                return ResolveMovesBishop(board, pos)
+            elif type == "Q":
+                return ResolveMovesQueen(board, pos)
+            elif type == "K":
+                return ResolveMovesKing(board, pos)
 
-    def getMoves(self, board, team):
+
+    def getMoves(self, board, team, beam_search=True):
         moves_dict = {}
         moves_list = []
         for m in range(len(board)):
             for n in range(len(board[0])):
                 if board[m][n] != "  " and board[m][n][0] == team:
-                    moves = self.ResolveMoves(board, (m,n))
+                    moves = self.ResolveMoves(board, (m,n), beam_search=beam_search)
                     moves_dict[(m,n)] = moves
                     moves_list += moves
+
         return moves_dict, moves_list
 
     def MakeMove(self):
@@ -286,19 +306,25 @@ class AI():
     
     """
     def checkMoveFilter(self, board, curr_team, currMoves, enemy_team, enemyMoves, king_loc):
+        keys = list(currMoves.keys())
         if king_loc in enemyMoves:
-            for src in currMoves.keys():
+            for src in keys:
                 src_y, src_x = src
                 src_val = board[src_y][src_x]
-                for move in currMoves[src]:
+                c_moves = copy.deepcopy(currMoves[src])
+                for move in c_moves:
                     tgt_y, tgt_x = move
                     tgt_val = board[tgt_y][tgt_x]
+                    old_king_loc = king_loc
+                    if (src_y, src_x) == king_loc:
+                        king_loc = move
                     self.SimMovePiece(board, src, "  ", move, src_val)
                     m_dict, next_turnEnemyMoves = self.getMoves(board, enemy_team)
                     if king_loc in next_turnEnemyMoves:
                         currMoves[src].remove(move)
                         if len(currMoves[src]) == 0:
                             currMoves.pop(src)
+                    king_loc = old_king_loc
                     self.SimMovePiece(board, move, tgt_val, src, src_val)
 
 
