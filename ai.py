@@ -135,7 +135,6 @@ def ResolveMovesKing(board, pos, f=False):
             available_moves.append((m, n))
     return available_moves
 
-
 class AI():
     def __init__(self, board, search_depth=6, team="w"):
         self.board = board
