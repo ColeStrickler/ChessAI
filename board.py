@@ -45,6 +45,26 @@ class Board():
         self.setting_font = self.pygame.font.SysFont('Times New Roman', 25)
         self.message_font = self.pygame.font.SysFont('Times New Roman', 15)
 
+
+
+        self.board = [["  ", "  ", "  ", "  ", "wK", "wB", "wN", "wR"],
+                      ["bp", "wp", "wp", "  ", "  ", "  ", "wp", "wp"],
+                      ["  ", "  ", "  ", "wR", "wp", "wp", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "bQ", "  ", "wB"],
+                      ["bp", "bp", "  ", "  ", "  ", "bp", "bp", "bp"],
+                      ["wN", "bN", "wQ", "bR", "  ", "bp", "bp", "bK"], ]
+
+
+        """
+        TEST BOARD
+        
+        good board for testing checkmate
+        
+        
+        
+        
         self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -53,23 +73,6 @@ class Board():
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
                       ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
                       ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]]
-
-
-
-
-        """
-        TEST BOARD
-        
-        good board for testing checkmate
-        self.board = [["  ", "  ", "  ", "  ", "wK", "wB", "wN", "wR"],
-                      ["wp", "wp", "wp", "  ", "  ", "  ", "wp", "wp"],
-                      ["  ", "  ", "  ", "wR", "wp", "wp", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "bK", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "wB"],
-                      ["bp", "bp", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["wN", "bN", "wQ", "  ", "  ", "  ", "  ", "  "],]
-        
         
         self.board = [["wR", "  ", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "  ", "wp", "wp", "wp"],

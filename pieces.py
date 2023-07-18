@@ -104,6 +104,47 @@ class Pawn(Piece):
         else:
             self.direction = 0
 
+    def getBestCaptured(self):
+        best = "  "
+        best_score = 0
+        if self.team == "w":
+            for cp in self.board.black_captured:
+                score = self.board.ai.getScore(cp.team + cp.type)
+                if score > best_score:
+                    best = cp
+                    best_score = 0
+        else:
+            for cp in self.board.white_captured:
+                score = self.board.ai.getScore(cp.team + cp.type)
+                if score > best_score:
+                    best = cp
+                    best_score = 0
+        return best
+
+    def replace_White(self):
+        replacement = self.getBestCaptured()
+        replacement.pos = self.pos
+        self.board.black_captured.remove(replacement)
+        self.board.black_captured.append(self)
+        self.board.entities.remove(self)
+        self.board.entities.append(replacement)
+
+    def replace_Black(self):
+        replacement = self.getBestCaptured()
+        replacement.pos = self.pos
+        self.board.white_captured.remove(replacement)
+        self.board.white_captured.append(self)
+        self.board.entities.remove(self)
+        self.board.entities.append(replacement)
+
+    def checkUpgrade(self):
+        if self.team == "w" and self.pos[0] == 7:
+            self.replace_White()
+        elif self.team == "b" and self.pos[0] == 0:
+            self.replace_Black()
+
+
+
     def getMoves(self):
         d1 = []
         d2 = []
@@ -157,9 +198,9 @@ class Pawn(Piece):
             y, x = self.pos
             self.board.board[y][x] = f"{self.team}{self.type}"
             self.start = False
+            self.checkUpgrade()
             return True
         else:
-            print("not in available moves")
             return False
 
 
