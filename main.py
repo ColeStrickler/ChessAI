@@ -20,12 +20,10 @@ AI_THINKING_LOCK = threading.Lock()
 def ai_moveThread():
     if b.white_turn and not b.ai_thinking:
         if AI_THINKING_LOCK.acquire(blocking=False):
-            print("got lock")
             b.setAIThinking()
             AI_MAKE_MOVE_THREAD = threading.Thread(target=b.AI_MakeMove, args=())
             AI_MAKE_MOVE_THREAD.start()
             AI_THINKING_LOCK.release()
-            print("released lock")
 
 
 
