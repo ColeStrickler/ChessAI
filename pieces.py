@@ -43,7 +43,7 @@ class Piece():
                 if tgt not in self.board.black_moves[self.pos]:
                     return False
         except Exception as e:
-            print(f"exception: {e}")
+            print(f"exception: {e} self.team: {self.team}, {self.pos}")
             return False
 
         if tgt in self.available_moves:

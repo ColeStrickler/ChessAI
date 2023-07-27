@@ -151,8 +151,8 @@ class Board():
                 self.checkGameOver()
                 self.setAIThinking()
                 break
-            #else:
-                #print("ai failed")
+            else:
+                print(piece.pos, "->", move, piece.type)
 
 
 
