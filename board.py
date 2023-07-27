@@ -1,5 +1,6 @@
 import copy
 import itertools
+import sys
 
 from ai import ResolveMovesKing, ResolveMovesKnight, ResolveMovesQueen, ResolveMovesBishop, ResolveMovesPawn, ResolveMovesRook
 import math
@@ -54,24 +55,23 @@ class Board():
                       ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
                       ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]]
 
-
         """
         TEST BOARD
         
         good board for testing checkmate
         
-        self.board = [["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
-                      ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
-                      ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-                      ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"]]
         
         
         
         
+        self.board = [["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["bR", "bR", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
+                      ["  ", "  ", "wK", "  ", "  ", "  ", "  ", "  "]]
         self.board = [["wR", "  ", "wB", "wQ", "wK", "wB", "wN", "wR"],
                       ["wp", "wp", "wp", "wp", "  ", "wp", "wp", "wp"],
                       ["  ", "  ", "  ", "  ", "  ", "  ", "  ", "  "],
@@ -92,7 +92,7 @@ class Board():
         
         """
 
-        self.ai = AI(self, search_depth=7)
+        self.ai = AI(self, search_depth=6)
         self.text_location = (self.screen.get_width() - self.settings_width + 15, self.screen.get_height() - 150)
         self.loading_texts = ["AI is thinking", "AI is thinking.", "AI is thinking..", "AI is thinking...", "AI is thinking...."]
         self.loading_texts_index = 0
@@ -142,12 +142,17 @@ class Board():
     Need to add the Game Over check again
     """
     def AI_MakeMove(self):
-        piece_loc, move = self.ai.MakeMove()
-        piece = self.piece_lookup[piece_loc]
-        if piece.move(move):
-            self.white_turn = not self.white_turn
-            self.checkGameOver()
-            self.setAIThinking()
+
+        while True:
+            piece_loc, move = self.ai.MakeMove()
+            piece = self.piece_lookup[piece_loc]
+            if piece.move(move):
+                self.white_turn = not self.white_turn
+                self.checkGameOver()
+                self.setAIThinking()
+                break
+            #else:
+                #print("ai failed")
 
 
 
@@ -247,9 +252,10 @@ class Board():
         if self.checkGameState():
             if len(self.white_moves) == 0:
                 print("BLACK WINS!")
+                sys.exit()
             elif len(self.black_moves) == 0:
                 print("WHITE WINS!")
-
+                sys.exit()
 
     """
     User Control/GUI Functions
