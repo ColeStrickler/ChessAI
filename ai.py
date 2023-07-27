@@ -226,17 +226,17 @@ class AI():
 
         if beam_search:
             if type == "p":
-                return OrderMoves(ResolveMovesPawn(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:1]
+                return OrderMoves(ResolveMovesPawn(board, pos), board, self.scoreDict, enemy_moves, pos)[0:1]
             elif type == "R":
-                return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict,enemy_moves, pos)#[0:3]
+                return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict,enemy_moves, pos)[0:3]
             elif type == "N":
-                return OrderMoves(ResolveMovesKnight(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:2]
+                return OrderMoves(ResolveMovesKnight(board, pos), board, self.scoreDict, enemy_moves, pos)[0:2]
             elif type == "B":
-                return OrderMoves(ResolveMovesBishop(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:3]
+                return OrderMoves(ResolveMovesBishop(board, pos), board, self.scoreDict, enemy_moves, pos)[0:3]
             elif type == "Q":
-                return OrderMoves(ResolveMovesQueen(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:3]
+                return OrderMoves(ResolveMovesQueen(board, pos), board, self.scoreDict, enemy_moves, pos)[0:3]
             elif type == "K":
-                m = OrderMoves(ResolveMovesKing(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:5]
+                m = OrderMoves(ResolveMovesKing(board, pos), board, self.scoreDict, enemy_moves, pos)[0:5]
                 return m
         else:
             if type == "p":

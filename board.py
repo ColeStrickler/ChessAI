@@ -92,7 +92,7 @@ class Board():
         
         """
 
-        self.ai = AI(self, search_depth=6)
+        self.ai = AI(self, search_depth=7)
         self.text_location = (self.screen.get_width() - self.settings_width + 15, self.screen.get_height() - 150)
         self.loading_texts = ["AI is thinking", "AI is thinking.", "AI is thinking..", "AI is thinking...", "AI is thinking...."]
         self.loading_texts_index = 0
