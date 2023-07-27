@@ -9,21 +9,41 @@ import pygame as p
 
 
 
-def MoveEvalFunc(board, move, score_dict, enemy_moves):
+def MoveEvalFunc(board, move, score_dict, enemy_moves, pos):
     y, x = move
     score = 0
     team = board[y][x][0]
     type = board[y][x][1]
+    y1, x1 = pos
+    piece = board[y1][x1]
+    if move in enemy_moves:
+       score -= score_dict[piece[1]]
+    score += (0.1) / (100 + abs(y - 4) + score_dict[piece[1]])  # middle board control heuristic -> makes AI more aggressive
     if type == " ":
-        return 0
-    score += 0.1/(1 + abs(y - 4) + score_dict[type])   # middle board control heuristic -> makes AI more aggressive
+        return score
     return score_dict[type] + score
 
-def OrderMoves(available_moves, board, score_dict, enemy_moves):
+def OrderMoves(available_moves, board, score_dict, enemy_moves, pos):
     if len(available_moves):
-        available_moves.sort(key=lambda x: MoveEvalFunc(board, x, score_dict, enemy_moves), reverse=True)
+        available_moves.sort(key=lambda x: MoveEvalFunc(board, x, score_dict, enemy_moves, pos), reverse=True)
         return available_moves
     return []
+
+
+def DictEval(board, move, score_dict):
+    y, x = move
+    type = board[y][x][1]
+    return score_dict[type]
+
+
+'''
+Use this 
+'''
+def OrderDict(board, moves_dict, score_dict):
+    m_list = [k for k,v in moves_dict.items()]
+    m_list.sort(key=lambda move: DictEval(board, move, score_dict))
+    moves_dict = {m: moves_dict[m] for m in m_list}
+
 
 def ResolveMovesPawn(board, pos):
     y, x = pos
@@ -150,6 +170,7 @@ class AI():
         '''
         self.w_moves = []
         self.b_moves = []
+        self.pruned = 0
 
         """
         Alpha/Beta Search Options
@@ -184,6 +205,7 @@ class AI():
         self.scoreDict["R"] = self.rook_val
         self.scoreDict["Q"] = self.queen_val
         self.scoreDict["B"] = self.bishop_val
+        self.scoreDict[" "] = 0
 
     """
     Move retrieval and Evaluation Functions
@@ -204,17 +226,17 @@ class AI():
 
         if beam_search:
             if type == "p":
-                return OrderMoves(ResolveMovesPawn(board, pos), board, self.scoreDict, enemy_moves)#[0:1]
+                return OrderMoves(ResolveMovesPawn(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:1]
             elif type == "R":
-                return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict,enemy_moves)#[0:3]
+                return OrderMoves(ResolveMovesRook(board, pos), board, self.scoreDict,enemy_moves, pos)#[0:3]
             elif type == "N":
-                return OrderMoves(ResolveMovesKnight(board, pos), board, self.scoreDict, enemy_moves)#[0:2]
+                return OrderMoves(ResolveMovesKnight(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:2]
             elif type == "B":
-                return OrderMoves(ResolveMovesBishop(board, pos), board, self.scoreDict, enemy_moves)#[0:3]
+                return OrderMoves(ResolveMovesBishop(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:3]
             elif type == "Q":
-                return OrderMoves(ResolveMovesQueen(board, pos), board, self.scoreDict, enemy_moves)#[0:3]
+                return OrderMoves(ResolveMovesQueen(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:3]
             elif type == "K":
-                m = OrderMoves(ResolveMovesKing(board, pos), board, self.scoreDict, enemy_moves)#[0:5]
+                m = OrderMoves(ResolveMovesKing(board, pos), board, self.scoreDict, enemy_moves, pos)#[0:5]
                 return m
         else:
             if type == "p":
@@ -248,6 +270,8 @@ class AI():
                     moves = self.ResolveMoves(board, (m,n), e_moves, beam_search=beam_search)
                     moves_dict[(m,n)] = moves
                     moves_list += moves
+        if beam_search:
+            OrderDict(board, moves_dict, self.scoreDict)
 
         return moves_dict, moves_list
 
@@ -334,7 +358,8 @@ class AI():
         end_time = time.time()
         elapsed_time = end_time - start_time
 
-        print("Elapsed time:", elapsed_time, "seconds", f"{chosen_piece}->{chosen_move}")
+        print("Elapsed time:", elapsed_time, "seconds", f"Total Pruned={self.pruned}")
+        self.pruned = 0
         return (chosen_piece, chosen_move)
 
     """
@@ -454,7 +479,7 @@ class AI():
                     if self.depth_beta[depth] <= alpha or self.depth_beta[depth] <= self.depth_alpha[depth] or alpha <= beta:
                         self.SimMovePiece(board, p, src_val=old_val, tgt=piece, tgt_val=piece_val)
                         self.ab_lock.release()
-                        #print(f"pruning {depth}")
+                        self.pruned += 1
                         break
                     self.ab_lock.release()
                 """ALPHA BETA PRUNING"""
@@ -517,7 +542,7 @@ class AI():
                     if beta <= self.depth_alpha[depth] or self.depth_beta[depth] <= self.depth_alpha[depth] or alpha <= beta:
                         self.SimMovePiece(board, p, src_val=old_val, tgt=piece, tgt_val=piece_val)
                         self.ab_lock.release()
-                       # print(f"pruning {depth}")
+                        self.pruned += 1
                         break
                     self.ab_lock.release()
                 """ALPHA BETA PRUNING"""
